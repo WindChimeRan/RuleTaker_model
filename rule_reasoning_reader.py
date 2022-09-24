@@ -17,6 +17,7 @@ from allennlp.data.tokenizers import Token, PretrainedTransformerTokenizer
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 # TagSpanType = ((int, int), str)
 
+
 @DatasetReader.register("rule_reasoning")
 class RuleReasoningReader(DatasetReader):
     """
@@ -25,20 +26,24 @@ class RuleReasoningReader(DatasetReader):
     ----------
     """
 
-    def __init__(self,
-                 pretrained_model: str,
-                 max_pieces: int = 512,
-                 syntax: str = "rulebase",
-                 add_prefix: Dict[str, str] = None,
-                 skip_id_regex: str = None,
-                 scramble_context: bool = False,
-                 use_context_full: bool = False,
-                 sample: int = -1) -> None:
+    def __init__(
+        self,
+        pretrained_model: str,
+        max_pieces: int = 512,
+        syntax: str = "rulebase",
+        add_prefix: Dict[str, str] = None,
+        skip_id_regex: str = None,
+        scramble_context: bool = False,
+        use_context_full: bool = False,
+        sample: int = -1,
+    ) -> None:
         super().__init__()
-        self._tokenizer = PretrainedTransformerTokenizer(pretrained_model, max_length=max_pieces)
+        self._tokenizer = PretrainedTransformerTokenizer(
+            pretrained_model, max_length=max_pieces
+        )
         self._tokenizer_internal = self._tokenizer.tokenizer
         token_indexer = PretrainedTransformerIndexer(pretrained_model)
-        self._token_indexers = {'tokens': token_indexer}
+        self._token_indexers = {"tokens": token_indexer}
 
         self._max_pieces = max_pieces
         self._add_prefix = add_prefix
@@ -60,7 +65,7 @@ class RuleReasoningReader(DatasetReader):
         debug = 5
         is_done = False
 
-        with open(file_path, 'r') as data_file:
+        with open(file_path, "r") as data_file:
             logger.info("Reading instances from jsonl dataset at: %s", file_path)
             for line in data_file:
                 if is_done:
@@ -71,15 +76,16 @@ class RuleReasoningReader(DatasetReader):
                     continue
 
                 if self._syntax == "rulebase":
-                    questions = item_json['questions']
+                    questions = item_json["questions"]
                     if self._use_context_full:
-                        context = item_json.get('context_full', '')
+                        context = item_json.get("context_full", "")
                     else:
-                        context = item_json.get('context', "")
+                        context = item_json.get("context", "")
                 elif self._syntax == "propositional-meta":
-                    questions = item_json['questions'].items()
-                    sentences = [x['text'] for x in item_json['triples'].values()] + \
-                                [x['text'] for x in item_json['rules'].values()]
+                    questions = item_json["questions"].items()
+                    sentences = [x["text"] for x in item_json["triples"].values()] + [
+                        x["text"] for x in item_json["rules"].values()
+                    ]
                     if self._scramble_context:
                         random.shuffle(sentences)
                     context = " ".join(sentences)
@@ -95,15 +101,15 @@ class RuleReasoningReader(DatasetReader):
                     if debug > 0:
                         logger.info(item_json)
                     if self._syntax == "rulebase":
-                        text = question['text']
-                        q_id = question.get('id')
+                        text = question["text"]
+                        q_id = question.get("id")
                         label = None
-                        if 'label' in question:
-                            label = 1 if question['label'] else 0
+                        if "label" in question:
+                            label = 1 if question["label"] else 0
                     elif self._syntax == "propositional-meta":
-                        text = question[1]['question']
+                        text = question[1]["question"]
                         q_id = f"{item_id}-{question[0]}"
-                        label = question[1].get('propAnswer')
+                        label = question[1].get("propAnswer")
                         if label is not None:
                             label = ["False", "True", "Unknown"].index(label)
 
@@ -112,34 +118,39 @@ class RuleReasoningReader(DatasetReader):
                         question_text=text,
                         context=context,
                         label=label,
-                        debug=debug)
+                        debug=debug,
+                    )
 
     @overrides
-    def text_to_instance(self,  # type: ignore
-                         item_id: str,
-                         question_text: str,
-                         label: int = None,
-                         context: str = None,
-                         debug: int = -1) -> Instance:
+    def text_to_instance(
+        self,  # type: ignore
+        item_id: str,
+        question_text: str,
+        label: int = None,
+        context: str = None,
+        debug: int = -1,
+    ) -> Instance:
         # pylint: disable=arguments-differ
         fields: Dict[str, Field] = {}
 
-        qa_tokens, segment_ids = self.transformer_features_from_qa(question_text, context)
+        qa_tokens, segment_ids = self.transformer_features_from_qa(
+            question_text, context
+        )
         qa_field = TextField(qa_tokens, self._token_indexers)
-        fields['phrase'] = qa_field
+        fields["phrase"] = qa_field
 
         metadata = {
             "id": item_id,
             "question_text": question_text,
             "tokens": [x.text for x in qa_tokens],
-            "context": context
+            "context": context,
         }
 
         if label is not None:
             # We'll assume integer labels don't need indexing
-            fields['label'] = LabelField(label, skip_indexing=isinstance(label, int))
-            metadata['label'] = label
-            metadata['correct_answer_index'] = label
+            fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
+            metadata["label"] = label
+            metadata["correct_answer_index"] = label
 
         if debug > 0:
             logger.info(f"qa_tokens = {qa_tokens}")
