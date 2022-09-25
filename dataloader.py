@@ -3,9 +3,10 @@ import json
 import logging
 import random
 import re
+import sys
 
 from overrides import overrides
-
+from minimal_allennlp import Field, Instance
 # from allennlp.common.file_utils import cached_path
 # from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 # from allennlp.data.fields import Field, TextField, LabelField
@@ -17,12 +18,30 @@ from overrides import overrides
 logger = logging.getLogger("dataloader")  # pylint: disable=invalid-name
 # TagSpanType = ((int, int), str)
 
-logging.basicConfig(
-    filename="dataloader.log",
-    level=logging.DEBUG,
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-)
+# logging.basicConfig(
+#     filename="dataloader.log",
+#     level=logging.INFO,
+#     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+# )
 # @DatasetReader.register("rule_reasoning")
+
+
+# logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(formatter)
+
+file_handler = logging.FileHandler('dataloader.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+
+logger.addHandler(file_handler)
+logger.addHandler(stdout_handler)
+
 
 dataset_dir = (
     "/data/hzz5361/raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/"
@@ -67,12 +86,14 @@ class RuleReasoningReader(object):
 
     # @overrides
     def _read(self, file_path: str):
+        # logger.debug("_read")
         instances = self._read_internal(file_path)
         return instances
 
     def _read_internal(self, file_path: str):
         # if `file_path` is a URL, redirect to the cache
         # file_path = cached_path(file_path)
+        # logger.debug("_read_internal")
         counter = self._sample + 1
         debug = 5
         is_done = False
@@ -132,9 +153,23 @@ class RuleReasoningReader(object):
                         label=label,
                         debug=debug,
                     )
-
-    # @overrides
     def text_to_instance(
+        self,  # type: ignore
+        item_id: str,
+        question_text: str,
+        label: int = None,
+        context: str = None,
+        debug: int = -1,
+    ) -> Instance:
+        metadata = {
+            "id": item_id,
+            "question_text": question_text,
+            "tokens": [x for x in question_text],
+            "context": context,
+        }
+        return metadata
+    # @overrides
+    def old_text_to_instance(
         self,  # type: ignore
         item_id: str,
         question_text: str,
@@ -144,7 +179,6 @@ class RuleReasoningReader(object):
     ) -> Instance:
         # pylint: disable=arguments-differ
         fields: Dict[str, Field] = {}
-
         qa_tokens, segment_ids = self.transformer_features_from_qa(
             question_text, context
         )
@@ -187,5 +221,14 @@ class RuleReasoningReader(object):
 
 
 if __name__ == "__main__":
-    reader = RuleReasoningReader()
-    reader._read(train_data_path)
+    logger.debug("debug")
+    backbone = "roberta-base"
+    reader = RuleReasoningReader(pretrained_model=backbone)
+    # reader._read(train_data_path)
+    for i, item in enumerate(reader._read_internal(train_data_path)):
+        if i > 20:
+            break
+        logger.debug(item)
+    # Shut down the logger
+    # logging.shutdown()
+    # print("emmm")
