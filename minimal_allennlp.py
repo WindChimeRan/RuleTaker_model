@@ -3,14 +3,17 @@ from typing import Dict, Generic, List, TypeVar, Any
 import torch
 
 DataArray = TypeVar(
-    "DataArray", torch.Tensor, Dict[str, torch.Tensor], Dict[str, Dict[str, torch.Tensor]]
+    "DataArray",
+    torch.Tensor,
+    Dict[str, torch.Tensor],
+    Dict[str, Dict[str, torch.Tensor]],
 )
-
 
 
 class Field(Generic[DataArray]):
     __slots__ = []  # type: ignore
-    def index(self, vocab: Any): # allennlp/allennlp/data/vocabulary.py
+
+    def index(self, vocab: Any):  # allennlp/allennlp/data/vocabulary.py
         """
         Given a :class:`Vocabulary`, converts all strings in this field into (typically) integers.
         This `modifies` the `Field` object, it does not return anything.
@@ -18,6 +21,7 @@ class Field(Generic[DataArray]):
         not need to implement this method.
         """
         pass
+
 
 class Instance(Mapping[str, Field]):
     """

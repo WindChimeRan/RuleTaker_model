@@ -5,36 +5,25 @@ import random
 import re
 import sys
 
+
+from transformers import AutoTokenizer
+
+
 from overrides import overrides
 from minimal_allennlp import Field, Instance
-# from allennlp.common.file_utils import cached_path
-# from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-# from allennlp.data.fields import Field, TextField, LabelField
-# from allennlp.data.fields import MetadataField, SequenceLabelField
-# from allennlp.data.instance import Instance
-# from allennlp.data.token_indexers import PretrainedTransformerIndexer
-# from allennlp.data.tokenizers import Token, PretrainedTransformerTokenizer
+
+# https://curiousily.com/posts/multi-label-text-classification-with-bert-and-pytorch-lightning/
 
 logger = logging.getLogger("dataloader")  # pylint: disable=invalid-name
-# TagSpanType = ((int, int), str)
 
-# logging.basicConfig(
-#     filename="dataloader.log",
-#     level=logging.INFO,
-#     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-# )
-# @DatasetReader.register("rule_reasoning")
-
-
-# logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
 
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
 stdout_handler.setFormatter(formatter)
 
-file_handler = logging.FileHandler('dataloader.log')
+file_handler = logging.FileHandler("dataloader.log")
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
@@ -76,6 +65,8 @@ class RuleReasoningReader(object):
         # token_indexer = PretrainedTransformerIndexer(pretrained_model)
         # self._token_indexers = {'tokens': token_indexer}
 
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
+
         self._max_pieces = max_pieces
         self._add_prefix = add_prefix
         self._scramble_context = scramble_context
@@ -84,13 +75,13 @@ class RuleReasoningReader(object):
         self._syntax = syntax
         self._skip_id_regex = skip_id_regex
 
-    # @overrides
-    def _read(self, file_path: str):
-        # logger.debug("_read")
-        instances = self._read_internal(file_path)
-        return instances
+    # # @overrides
+    # def _read(self, file_path: str):
+    #     # logger.debug("_read")
+    #     instances = self._read_internal(file_path)
+    #     return instances
 
-    def _read_internal(self, file_path: str):
+    def read_generator(self, file_path: str):
         # if `file_path` is a URL, redirect to the cache
         # file_path = cached_path(file_path)
         # logger.debug("_read_internal")
@@ -139,12 +130,12 @@ class RuleReasoningReader(object):
                         label = None
                         if "label" in question:
                             label = 1 if question["label"] else 0
-                    elif self._syntax == "propositional-meta":
-                        text = question[1]["question"]
-                        q_id = f"{item_id}-{question[0]}"
-                        label = question[1].get("propAnswer")
-                        if label is not None:
-                            label = ["False", "True", "Unknown"].index(label)
+                    # elif self._syntax == "propositional-meta":
+                    #     text = question[1]["question"]
+                    #     q_id = f"{item_id}-{question[0]}"
+                    #     label = question[1].get("propAnswer")
+                    #     if label is not None:
+                    #         label = ["False", "True", "Unknown"].index(label)
 
                     yield self.text_to_instance(
                         item_id=q_id,
@@ -153,6 +144,7 @@ class RuleReasoningReader(object):
                         label=label,
                         debug=debug,
                     )
+
     def text_to_instance(
         self,  # type: ignore
         item_id: str,
@@ -161,13 +153,35 @@ class RuleReasoningReader(object):
         context: str = None,
         debug: int = -1,
     ) -> Instance:
+
+        encoding = self.tokenizer.encode_plus(
+            text=question_text,
+            text_pair=context,
+            add_special_tokens=True,
+            max_length=self._max_pieces,
+            return_token_type_ids=True,
+            # return_token_type_ids=False,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+
         metadata = {
-            "id": item_id,
+            # "id": item_id,
+            "id": encoding["input_ids"].flatten(),
             "question_text": question_text,
-            "tokens": [x for x in question_text],
+            "tokens": [x for x in question_text.split()],
             "context": context,
         }
+        if label is not None:
+            # We'll assume integer labels don't need indexing
+            # fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
+            metadata["label"] = label
+            metadata["correct_answer_index"] = label
+
         return metadata
+
     # @overrides
     def old_text_to_instance(
         self,  # type: ignore
@@ -208,9 +222,9 @@ class RuleReasoningReader(object):
         return Instance(fields)
 
     def transformer_features_from_qa(self, question: str, context: str):
-        if self._add_prefix is not None:
-            question = self._add_prefix.get("q", "") + question
-            context = self._add_prefix.get("c", "") + context
+        # if self._add_prefix is not None:
+        #     question = self._add_prefix.get("q", "") + question
+        #     context = self._add_prefix.get("c", "") + context
         if context is not None:
             tokens = self._tokenizer.tokenize_sentence_pair(question, context)
         else:
@@ -225,7 +239,7 @@ if __name__ == "__main__":
     backbone = "roberta-base"
     reader = RuleReasoningReader(pretrained_model=backbone)
     # reader._read(train_data_path)
-    for i, item in enumerate(reader._read_internal(train_data_path)):
+    for i, item in enumerate(reader.read_generator(train_data_path)):
         if i > 20:
             break
         logger.debug(item)
