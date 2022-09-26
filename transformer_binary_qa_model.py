@@ -138,30 +138,30 @@ class TransformerBinaryQA(Model):
                 attention_mask=util.combine_initial_dims(question_mask),
             )
             cls_output = self._dropout(pooled_output)
-        if "albert" in self._pretrained_model:
-            transformer_outputs, pooled_output = self._transformer_model(
-                input_ids=util.combine_initial_dims(input_ids),
-                # token_type_ids=util.combine_initial_dims(segment_ids),
-                attention_mask=util.combine_initial_dims(question_mask),
-            )
-            cls_output = self._dropout(pooled_output)
-        elif "xlnet" in self._pretrained_model:
-            transformer_outputs = self._transformer_model(
-                input_ids=util.combine_initial_dims(input_ids),
-                token_type_ids=util.combine_initial_dims(segment_ids),
-                attention_mask=util.combine_initial_dims(question_mask),
-            )
-            cls_output = self.sequence_summary(transformer_outputs[0])
+        # if "albert" in self._pretrained_model:
+        #     transformer_outputs, pooled_output = self._transformer_model(
+        #         input_ids=util.combine_initial_dims(input_ids),
+        #         # token_type_ids=util.combine_initial_dims(segment_ids),
+        #         attention_mask=util.combine_initial_dims(question_mask),
+        #     )
+        #     cls_output = self._dropout(pooled_output)
+        # elif "xlnet" in self._pretrained_model:
+        #     transformer_outputs = self._transformer_model(
+        #         input_ids=util.combine_initial_dims(input_ids),
+        #         token_type_ids=util.combine_initial_dims(segment_ids),
+        #         attention_mask=util.combine_initial_dims(question_mask),
+        #     )
+        #     cls_output = self.sequence_summary(transformer_outputs[0])
 
-        elif "bert" in self._pretrained_model:
-            last_layer, pooled_output = self._transformer_model(
-                input_ids=util.combine_initial_dims(input_ids),
-                token_type_ids=util.combine_initial_dims(segment_ids),
-                attention_mask=util.combine_initial_dims(question_mask),
-            )
-            cls_output = self._dropout(pooled_output)
-        else:
-            assert ValueError
+        # elif "bert" in self._pretrained_model:
+        #     last_layer, pooled_output = self._transformer_model(
+        #         input_ids=util.combine_initial_dims(input_ids),
+        #         token_type_ids=util.combine_initial_dims(segment_ids),
+        #         attention_mask=util.combine_initial_dims(question_mask),
+        #     )
+        #     cls_output = self._dropout(pooled_output)
+        # else:
+        #     assert ValueError
 
         label_logits = self._classifier(cls_output)
 

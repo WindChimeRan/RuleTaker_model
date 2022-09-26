@@ -1,6 +1,6 @@
 from dataset_reader import RuleTakerDataset
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
