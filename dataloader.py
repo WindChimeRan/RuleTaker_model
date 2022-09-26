@@ -168,8 +168,10 @@ class RuleReasoningReader(object):
         )
 
         metadata = {
-            # "id": item_id,
-            "id": encoding["input_ids"].flatten(),
+            "id": item_id,
+            "token_ids": encoding["input_ids"].flatten(),
+            "attention_mask": encoding["attention_mask"].flatten(),
+            "segment_ids": encoding["token_type_ids"],
             "question_text": question_text,
             "tokens": [x for x in question_text.split()],
             "context": context,
@@ -182,56 +184,56 @@ class RuleReasoningReader(object):
 
         return metadata
 
-    # @overrides
-    def old_text_to_instance(
-        self,  # type: ignore
-        item_id: str,
-        question_text: str,
-        label: int = None,
-        context: str = None,
-        debug: int = -1,
-    ) -> Instance:
-        # pylint: disable=arguments-differ
-        fields: Dict[str, Field] = {}
-        qa_tokens, segment_ids = self.transformer_features_from_qa(
-            question_text, context
-        )
-        qa_field = TextField(qa_tokens, self._token_indexers)
-        fields["phrase"] = qa_field
+    # # @overrides
+    # def old_text_to_instance(
+    #     self,  # type: ignore
+    #     item_id: str,
+    #     question_text: str,
+    #     label: int = None,
+    #     context: str = None,
+    #     debug: int = -1,
+    # ) -> Instance:
+    #     # pylint: disable=arguments-differ
+    #     fields: Dict[str, Field] = {}
+    #     qa_tokens, segment_ids = self.transformer_features_from_qa(
+    #         question_text, context
+    #     )
+    #     qa_field = TextField(qa_tokens, self._token_indexers)
+    #     fields["phrase"] = qa_field
 
-        metadata = {
-            "id": item_id,
-            "question_text": question_text,
-            "tokens": [x.text for x in qa_tokens],
-            "context": context,
-        }
+    #     metadata = {
+    #         "id": item_id,
+    #         "question_text": question_text,
+    #         "tokens": [x.text for x in qa_tokens],
+    #         "context": context,
+    #     }
 
-        if label is not None:
-            # We'll assume integer labels don't need indexing
-            fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
-            metadata["label"] = label
-            metadata["correct_answer_index"] = label
+    #     if label is not None:
+    #         # We'll assume integer labels don't need indexing
+    #         fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
+    #         metadata["label"] = label
+    #         metadata["correct_answer_index"] = label
 
-        if debug > 0:
-            logger.info(f"qa_tokens = {qa_tokens}")
-            logger.info(f"context = {context}")
-            logger.info(f"label = {label}")
+    #     if debug > 0:
+    #         logger.info(f"qa_tokens = {qa_tokens}")
+    #         logger.info(f"context = {context}")
+    #         logger.info(f"label = {label}")
 
-        fields["metadata"] = MetadataField(metadata)
+    #     fields["metadata"] = MetadataField(metadata)
 
-        return Instance(fields)
+    #     return Instance(fields)
 
-    def transformer_features_from_qa(self, question: str, context: str):
-        # if self._add_prefix is not None:
-        #     question = self._add_prefix.get("q", "") + question
-        #     context = self._add_prefix.get("c", "") + context
-        if context is not None:
-            tokens = self._tokenizer.tokenize_sentence_pair(question, context)
-        else:
-            tokens = self._tokenizer.tokenize(question)
-        segment_ids = [0] * len(tokens)
+    # def transformer_features_from_qa(self, question: str, context: str):
+    #     # if self._add_prefix is not None:
+    #     #     question = self._add_prefix.get("q", "") + question
+    #     #     context = self._add_prefix.get("c", "") + context
+    #     if context is not None:
+    #         tokens = self._tokenizer.tokenize_sentence_pair(question, context)
+    #     else:
+    #         tokens = self._tokenizer.tokenize(question)
+    #     segment_ids = [0] * len(tokens)
 
-        return tokens, segment_ids
+    #     return tokens, segment_ids
 
 
 if __name__ == "__main__":
