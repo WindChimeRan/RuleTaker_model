@@ -19,18 +19,20 @@ class RuleTakerModel(pl.LightningModule):
         self.dropout = nn.Dropout(self.bert.config.hidden_dropout_prob)
         self.n_training_steps = n_training_steps
         self.n_warmup_steps = n_warmup_steps
-        # self.criterion = nn.BCELoss()
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, input_ids, attention_mask, labels=None):
         output = self.bert(input_ids, attention_mask=attention_mask)
         output = self.classifier(output.pooler_output)
-        cls_output = self.dropout(output)
-        # output = torch.sigmoid(output)
+        label_logits = self.dropout(output)
+        output_dic = {}
         loss = 0
         if labels is not None:
-            loss = self.criterion(cls_output, labels)
-        return loss, output
+            loss = self.criterion(label_logits, labels)
+        output_dic["label_logits"] = label_logits
+        output_dic["label_probs"] = nn.functional.softmax(label_logits, dim=1)
+        output_dic["answer_index"] = label_logits.argmax(1)
+        return loss, output_dic
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
