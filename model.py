@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
-from pytorch_lightning.metrics.functional import accuracy, f1, auroc
+
+# from pytorch_lightning.metrics.functional import accuracy, f1, auroc
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from transformers import AutoModel
