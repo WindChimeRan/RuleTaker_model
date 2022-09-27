@@ -33,7 +33,7 @@ data_module = RuleTakerDataModule(
     batch_size=batch_size,
 )
 
-data_module.setup()
+# data_module.setup()
 
 steps_per_epoch = len(data_module.train_dataset) // batch_size
 total_training_steps = steps_per_epoch * N_EPOCHS
@@ -49,7 +49,7 @@ checkpoint_callback = ModelCheckpoint(
     mode="min",
 )
 
-logger = TensorBoardLogger("lightning_logs", name="toxic-comments")
+logger = TensorBoardLogger("lightning_logs", name="leapofthought")
 
 early_stopping_callback = EarlyStopping(monitor="val_loss", patience=2)
 
@@ -62,9 +62,10 @@ trainer = pl.Trainer(
     # checkpoint_callback=checkpoint_callback,
     callbacks=[early_stopping_callback, checkpoint_callback],
     max_epochs=N_EPOCHS,
-    accelerator="cpu",
-    # gpus=1,
-    enable_progress_bar=True,
+    # accelerator="gpu",
+    gpus=[4],
+    enable_progress_bar=True
+    # num_sanity_val_steps=0,
 )
 
 

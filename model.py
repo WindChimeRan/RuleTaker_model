@@ -16,15 +16,15 @@ MODEL_NAME = "roberta-base"
 class RuleTakerModel(pl.LightningModule):
     def __init__(self, n_classes: int, n_training_steps=None, n_warmup_steps=None):
         super().__init__()
-        self.bert = AutoModel.from_pretrained(MODEL_NAME, return_dict=True)
-        self.classifier = nn.Linear(self.bert.config.hidden_size, n_classes)
-        self.dropout = nn.Dropout(self.bert.config.hidden_dropout_prob)
+        self.encoder = AutoModel.from_pretrained(MODEL_NAME, return_dict=True)
+        self.classifier = nn.Linear(self.encoder.config.hidden_size, n_classes)
+        self.dropout = nn.Dropout(self.encoder.config.hidden_dropout_prob)
         self.n_training_steps = n_training_steps
         self.n_warmup_steps = n_warmup_steps
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, input_ids, attention_mask, label=None):
-        output = self.bert(input_ids, attention_mask=attention_mask)
+        output = self.encoder(input_ids, attention_mask=attention_mask)
         output = self.classifier(output.pooler_output)
         label_logits = self.dropout(output)
         output_dic = {}
@@ -43,6 +43,8 @@ class RuleTakerModel(pl.LightningModule):
         return loss, output_dic
 
     def training_step(self, batch, batch_idx):
+        # data, metadata = batch
+
         input_ids = batch["token_ids"]
         attention_mask = batch["attention_mask"]
         label = batch["label"]
@@ -59,6 +61,8 @@ class RuleTakerModel(pl.LightningModule):
         return loss
 
     def test_step(self, batch, batch_idx):
+        # data, metadata = batch
+
         input_ids = batch["token_ids"]
         attention_mask = batch["attention_mask"]
         label = batch["label"]

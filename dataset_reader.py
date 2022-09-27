@@ -173,7 +173,7 @@ class RuleTakerDataset(Dataset):
         label: int = None,
         context: str = None,
         debug: int = -1,
-    ) -> Instance:
+    ):
 
         encoding = self.tokenizer.encode_plus(
             text=question_text,
@@ -187,12 +187,16 @@ class RuleTakerDataset(Dataset):
             return_attention_mask=True,
             return_tensors="pt",
         )
-
-        metadata = {
-            "id": item_id,
+        data = {
             "token_ids": encoding["input_ids"].flatten(),
             "attention_mask": encoding["attention_mask"].flatten(),
             "segment_ids": encoding["token_type_ids"],
+        }
+        metadata = {
+            "id": item_id,
+            # "token_ids": encoding["input_ids"].flatten(),
+            # "attention_mask": encoding["attention_mask"].flatten(),
+            # "segment_ids": encoding["token_type_ids"],
             "question_text": question_text,
             "tokens": [x for x in question_text.split()],
             "context": context,
@@ -200,10 +204,12 @@ class RuleTakerDataset(Dataset):
         if label is not None:
             # We'll assume integer labels don't need indexing
             # fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
-            metadata["label"] = label
-            metadata["correct_answer_index"] = label
+            data["label"] = label
+            data["correct_answer_index"] = label
 
-        return metadata
+        data["metadata"] = metadata
+        return data
+        # return (data, metadata)
 
     # # @overrides
     # def old_text_to_instance(
@@ -260,7 +266,8 @@ class RuleTakerDataset(Dataset):
 if __name__ == "__main__":
     logger.debug("debug")
     backbone = "roberta-base"
-    reader = RuleTakerDataset(path=train_data_path, pretrained_model=backbone)
+    # reader = RuleTakerDataset(path=train_data_path, pretrained_model=backbone)
+    reader = RuleTakerDataset(path=test_data_path, pretrained_model=backbone)
     # reader._read(train_data_path)
     for i in range(20):
         logger.debug(reader[i])
