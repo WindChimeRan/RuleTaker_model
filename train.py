@@ -21,7 +21,7 @@ dataset_dir = (
 
 
 N_EPOCHS = 3
-batch_size = 4
+batch_size = 8
 train_data_path = dataset_dir + "train.jsonl"
 validation_data_path = dataset_dir + "dev.jsonl"
 test_data_path = dataset_dir + "test.jsonl"
@@ -66,8 +66,8 @@ trainer = pl.Trainer(
     callbacks=[early_stopping_callback, checkpoint_callback],
     max_epochs=N_EPOCHS,
     accelerator="gpu",
-    # gpus=[6, 7],
-    gpus=[7],
+    gpus=[6, 7],
+    # gpus=[7],
     enable_progress_bar=True
     # num_sanity_val_steps=0,
 )
