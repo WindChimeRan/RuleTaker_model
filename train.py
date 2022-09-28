@@ -14,14 +14,14 @@ RANDOM_SEED = 71
 
 pl.seed_everything(RANDOM_SEED)
 
-backbone = "roberta-base"
+backbone = "roberta-large"
 dataset_dir = (
     "/data/hzz5361/raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/"
 )
 
 
 N_EPOCHS = 3
-batch_size = 32
+batch_size = 4
 train_data_path = dataset_dir + "train.jsonl"
 validation_data_path = dataset_dir + "dev.jsonl"
 test_data_path = dataset_dir + "test.jsonl"
@@ -54,7 +54,10 @@ logger = TensorBoardLogger("lightning_logs", name="leapofthought")
 early_stopping_callback = EarlyStopping(monitor="val_loss", patience=2)
 
 model = RuleTakerModel(
-    n_classes=2, n_training_steps=total_training_steps, n_warmup_steps=warmup_steps
+    encoder_name=backbone,
+    n_classes=2,
+    n_training_steps=total_training_steps,
+    n_warmup_steps=warmup_steps,
 )
 
 trainer = pl.Trainer(
@@ -62,11 +65,13 @@ trainer = pl.Trainer(
     # checkpoint_callback=checkpoint_callback,
     callbacks=[early_stopping_callback, checkpoint_callback],
     max_epochs=N_EPOCHS,
-    # accelerator="gpu",
-    gpus=[4],
+    accelerator="gpu",
+    # gpus=[6, 7],
+    gpus=[7],
     enable_progress_bar=True
     # num_sanity_val_steps=0,
 )
 
+if __name__ == "__main__":
 
-trainer.fit(model, data_module)
+    trainer.fit(model, data_module)

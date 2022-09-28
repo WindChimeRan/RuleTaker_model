@@ -10,7 +10,8 @@ from transformers import AutoTokenizer
 
 
 from overrides import overrides
-from minimal_allennlp import Field, Instance
+
+# from minimal_allennlp import Field, Instance
 
 import torch
 import torch.nn as nn
@@ -99,7 +100,7 @@ class RuleTakerDataset(Dataset):
         # file_path = cached_path(file_path)
         # logger.debug("_read_internal")
         counter = self._sample + 1
-        debug = 5
+        debug = 1
         is_done = False
 
         with open(file_path, "r") as data_file:
@@ -136,7 +137,7 @@ class RuleTakerDataset(Dataset):
                         is_done = True
                         break
                     if debug > 0:
-                        logger.info(item_json)
+                        logger.debug(item_json)
                     if self._syntax == "rulebase":
                         text = question["text"]
                         q_id = question.get("id")

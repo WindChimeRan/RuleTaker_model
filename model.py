@@ -10,13 +10,19 @@ import torch.nn as nn
 import torch
 
 
-MODEL_NAME = "roberta-base"
+# MODEL_NAME = "roberta-base"
 
 
 class RuleTakerModel(pl.LightningModule):
-    def __init__(self, n_classes: int, n_training_steps=None, n_warmup_steps=None):
+    def __init__(
+        self,
+        encoder_name: str,
+        n_classes: int,
+        n_training_steps=None,
+        n_warmup_steps=None,
+    ):
         super().__init__()
-        self.encoder = AutoModel.from_pretrained(MODEL_NAME, return_dict=True)
+        self.encoder = AutoModel.from_pretrained(encoder_name, return_dict=True)
         self.classifier = nn.Linear(self.encoder.config.hidden_size, n_classes)
         self.dropout = nn.Dropout(self.encoder.config.hidden_dropout_prob)
         self.n_training_steps = n_training_steps
@@ -57,7 +63,7 @@ class RuleTakerModel(pl.LightningModule):
         attention_mask = batch["attention_mask"]
         label = batch["label"]
         loss, outputs = self(input_ids, attention_mask, label)
-        self.log("val_loss", loss, prog_bar=True, logger=True)
+        self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -67,7 +73,7 @@ class RuleTakerModel(pl.LightningModule):
         attention_mask = batch["attention_mask"]
         label = batch["label"]
         loss, outputs = self(input_ids, attention_mask, label)
-        self.log("test_loss", loss, prog_bar=True, logger=True)
+        self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True)
         return loss
 
     def training_epoch_end(self, outputs):
