@@ -12,12 +12,12 @@ class RuleTakerDataModule(pl.LightningDataModule):
         self.train_path = train_path
         self.test_path = test_path
         self.pretrained_model = pretrained_model
+        # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
+        # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
+
+    def setup(self, stage=None):
         self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
         self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
-
-    # def setup(self, stage=None):
-    #     self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
-    #     self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
     @staticmethod
     def custom_collate(batch):

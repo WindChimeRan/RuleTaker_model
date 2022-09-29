@@ -1,0 +1,23 @@
+seed_everything: 71
+trainer:
+  gpus: 2
+  max_epochs: 4
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+      init_args: 
+        logging_interval: step
+model:
+  lr: 1e-5
+  warmup_steps: 2500
+  model_name: roberta-large
+  pos_weight: 4
+data:
+  # dataset: ruletaker
+  batch_size: 4
+  num_workers: 4
+  max_input_len: 128
+  train_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/train.jsonl
+  dev_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/dev.jsonl
+  test_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/test.jsonl
+  # path_train: ../data/proofwriter-dataset-V2020.12.3/preprocessed_OWA/depth-3ext/meta-train.jsonl 
+  # path_val: ../data/proofwriter-dataset-V2020.12.3/preprocessed_OWA/depth-3ext/meta-dev.jsonl 

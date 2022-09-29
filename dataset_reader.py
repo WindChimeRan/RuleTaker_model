@@ -21,7 +21,7 @@ from torch.utils.data import Dataset, DataLoader
 
 logger = logging.getLogger("dataloader")  # pylint: disable=invalid-name
 
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
 
 stdout_handler = logging.StreamHandler(sys.stdout)
