@@ -1,21 +1,20 @@
 seed_everything: 71
 trainer:
-  gpus: [6, 7]
+  gpus: 2
   max_epochs: 4
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.EarlyStopping
+    init_args:
+      monitor: val_loss
+      patience: 2
 model:
   n_classes: 2
-  # lr: 1e-5
   n_warmup_steps: 2500
   n_training_steps: 70108
   encoder_name: roberta-large
-  # pos_weight: 4
 data:
-  # dataset: ruletaker
   batch_size: 8
-  # num_workers: 4
-  # max_input_len: 128
+  encoder_name: roberta-large
   train_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/train.jsonl
   dev_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/dev.jsonl
   test_path: ../../raw_data/rule-reasoning-dataset-V2020.2.5.0/original/depth-3/test.jsonl
-  # path_train: ../data/proofwriter-dataset-V2020.12.3/preprocessed_OWA/depth-3ext/meta-train.jsonl 
-  # path_val: ../data/proofwriter-dataset-V2020.12.3/preprocessed_OWA/depth-3ext/meta-dev.jsonl 
