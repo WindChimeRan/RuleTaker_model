@@ -28,12 +28,13 @@ test_data_path = dataset_dir + "test.jsonl"
 
 data_module = RuleTakerDataModule(
     train_path=train_data_path,
+    dev_path=validation_data_path,
     test_path=test_data_path,
-    pretrained_model=backbone,
+    encoder_name=backbone,
     batch_size=batch_size,
 )
 
-# data_module.setup()
+data_module.setup()
 
 steps_per_epoch = len(data_module.train_dataset) // batch_size
 total_training_steps = steps_per_epoch * N_EPOCHS

@@ -6,17 +6,19 @@ import collections
 
 
 class RuleTakerDataModule(pl.LightningDataModule):
-    def __init__(self, train_path, test_path, pretrained_model, batch_size=8):
+    def __init__(self, train_path, dev_path, test_path, encoder_name, batch_size=8):
         super().__init__()
         self.batch_size = batch_size
         self.train_path = train_path
+        self.dev_path = dev_path
         self.test_path = test_path
-        self.pretrained_model = pretrained_model
+        self.pretrained_model = encoder_name
         # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
         # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
     def setup(self, stage=None):
         self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
+        self.dev_dataset = RuleTakerDataset(self.pretrained_model, self.dev_path)
         self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
     @staticmethod
