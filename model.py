@@ -95,15 +95,16 @@ class RuleTakerModel(pl.LightningModule):
         #     )
 
     def configure_optimizers(self):
+        pass
 
-        optimizer = AdamW(self.parameters(), lr=2e-5)
+    #     optimizer = AdamW(self.parameters(), lr=1e-5)
 
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=self.n_warmup_steps,
-            num_training_steps=self.n_training_steps,
-        )
+    #     scheduler = get_linear_schedule_with_warmup(
+    #         optimizer,
+    #         num_warmup_steps=self.n_warmup_steps,
+    #         num_training_steps=self.n_training_steps,
+    #     )
 
-        return dict(
-            optimizer=optimizer, lr_scheduler=dict(scheduler=scheduler, interval="step")
-        )
+    #     return dict(
+    #         optimizer=optimizer, lr_scheduler=dict(scheduler=scheduler, interval="step")
+    #     )

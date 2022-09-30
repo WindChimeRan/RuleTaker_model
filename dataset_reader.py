@@ -47,17 +47,11 @@ test_data_path = dataset_dir + "test.jsonl"
 
 
 class RuleTakerDataset(Dataset):
-    """
-
-    Parameters
-    ----------
-    """
-
     def __init__(
         self,
         pretrained_model: str,
         path: str,
-        max_pieces: int = 512,
+        max_pieces: int = 384,
         syntax: str = "rulebase",
         add_prefix: Dict[str, str] = None,
         skip_id_regex: str = None,

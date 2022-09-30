@@ -15,7 +15,12 @@ class RuletakerCLI(LightningCLI):
 
 
 def main() -> None:
-    cli = RuletakerCLI(RuleTakerModel, RuleTakerDataModule, save_config_overwrite=True)
+    cli = RuletakerCLI(
+        RuleTakerModel,
+        RuleTakerDataModule,
+        save_config_overwrite=True,
+        auto_registry=True,
+    )
     print("Configuration: \n", cli.config)
 
 

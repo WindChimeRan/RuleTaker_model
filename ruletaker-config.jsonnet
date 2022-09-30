@@ -38,10 +38,6 @@ local cuda_device = 0;
         "batch_size": batch_size
       }
   },
-//   "iterator": {
-//     "type": "basic",
-//     "batch_size": batch_size
-//   },
   "trainer": {
     "optimizer": {
       "type": "huggingface_adamw",

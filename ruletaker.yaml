@@ -1,12 +1,30 @@
 seed_everything: 71
+optimizer:
+  class_path: transformers.optimization.AdamW
+  init_args:
+    lr: 1e-5
+    betas: [0.9, 0.98]
+    weight_decay: 0.1
+lr_scheduler:
+# https://gist.github.com/ceshine/ff32968bafc6fead87d7b6233ad8ab69
+  class_path: torch.optim.lr_scheduler.OneCycleLR
+  init_args:
+    epochs: 4 
+    steps_per_epoch: 4381
+    pct_start: 0.06
+    anneal_strategy: linear
+    max_lr: 3.2e-4
+    div_factor: 32
+    cycle_momentum: False
 trainer:
   gpus: [6, 7]
   max_epochs: 4
-  callbacks:
-  - class_path: pytorch_lightning.callbacks.EarlyStopping
-    init_args:
-      monitor: val_loss
-      patience: 2
+  gradient_clip_val: 1.0
+  # callbacks:
+  # - class_path: pytorch_lightning.callbacks.EarlyStopping
+  #   init_args:
+  #     monitor: val_loss
+  #     patience: 2
 model:
   n_classes: 2
   n_warmup_steps: 2500

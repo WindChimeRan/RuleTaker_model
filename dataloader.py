@@ -13,8 +13,6 @@ class RuleTakerDataModule(pl.LightningDataModule):
         self.dev_path = dev_path
         self.test_path = test_path
         self.plm = plm
-        # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
-        # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders
@@ -28,10 +26,6 @@ class RuleTakerDataModule(pl.LightningDataModule):
 
         if stage == "test":
             self.test_dataset = RuleTakerDataset(self.plm, self.test_path)
-
-        # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
-        # self.dev_dataset = RuleTakerDataset(self.pretrained_model, self.dev_path)
-        # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
         # self.steps_per_epoch = len(self.train_dataset) // self.batch_size
         # total_training_steps = self.steps_per_epoch * N_EPOCHS
@@ -49,12 +43,6 @@ class RuleTakerDataModule(pl.LightningDataModule):
         }
         data["metadata"] = [d["metadata"] for d in batch]
         return data
-        # if isinstance(elem, collections.abc.Mapping):
-        #     try:
-        #         return elem_type({key: default_collate([d[key] for d in batch]) for key in elem if key != "metadata"})
-        #     except TypeError:
-        #         # The mapping type may not support `__init__(iterable)`.
-        #         return {key: default_collate([d[key] for d in batch]) for key in elem}
 
     def train_dataloader(self):
         return DataLoader(

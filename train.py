@@ -30,7 +30,7 @@ data_module = RuleTakerDataModule(
     train_path=train_data_path,
     dev_path=validation_data_path,
     test_path=test_data_path,
-    encoder_name=backbone,
+    plm=backbone,
     batch_size=batch_size,
 )
 
