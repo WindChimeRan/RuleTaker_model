@@ -6,20 +6,36 @@ import collections
 
 
 class RuleTakerDataModule(pl.LightningDataModule):
-    def __init__(self, train_path, dev_path, test_path, encoder_name, batch_size=8):
+    def __init__(self, train_path, dev_path, test_path, plm, batch_size=8):
         super().__init__()
         self.batch_size = batch_size
         self.train_path = train_path
         self.dev_path = dev_path
         self.test_path = test_path
-        self.pretrained_model = encoder_name
+        self.plm = plm
         # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
         # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
 
     def setup(self, stage=None):
-        self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
-        self.dev_dataset = RuleTakerDataset(self.pretrained_model, self.dev_path)
-        self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
+        # Assign train/val datasets for use in dataloaders
+        if stage == "fit":
+            self.train_dataset = RuleTakerDataset(self.plm, self.train_path)
+            self.dev_dataset = RuleTakerDataset(self.plm, self.dev_path)
+            # self.steps_per_epoch = len(self.train_dataset) // self.batch_size
+        # Assign test dataset for use in dataloader(s)
+        if stage == "validate":
+            self.dev_dataset = RuleTakerDataset(self.plm, self.dev_path)
+
+        if stage == "test":
+            self.test_dataset = RuleTakerDataset(self.plm, self.test_path)
+
+        # self.train_dataset = RuleTakerDataset(self.pretrained_model, self.train_path)
+        # self.dev_dataset = RuleTakerDataset(self.pretrained_model, self.dev_path)
+        # self.test_dataset = RuleTakerDataset(self.pretrained_model, self.test_path)
+
+        # self.steps_per_epoch = len(self.train_dataset) // self.batch_size
+        # total_training_steps = self.steps_per_epoch * N_EPOCHS
+        # warmup_steps = total_training_steps // 5
 
     @staticmethod
     def custom_collate(batch):
@@ -51,7 +67,7 @@ class RuleTakerDataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            self.test_dataset,
+            self.dev_dataset,
             batch_size=self.batch_size,
             num_workers=4,
             collate_fn=self.custom_collate,

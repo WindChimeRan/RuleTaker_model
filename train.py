@@ -55,7 +55,7 @@ logger = TensorBoardLogger("lightning_logs", name="leapofthought")
 early_stopping_callback = EarlyStopping(monitor="val_loss", patience=2)
 
 model = RuleTakerModel(
-    encoder_name=backbone,
+    plm=backbone,
     n_classes=2,
     n_training_steps=total_training_steps,
     n_warmup_steps=warmup_steps,
@@ -74,5 +74,4 @@ trainer = pl.Trainer(
 )
 
 if __name__ == "__main__":
-
     trainer.fit(model, data_module)

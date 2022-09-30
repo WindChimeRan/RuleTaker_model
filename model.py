@@ -15,14 +15,11 @@ import torch
 
 class RuleTakerModel(pl.LightningModule):
     def __init__(
-        self,
-        encoder_name: str,
-        n_classes: int,
-        n_training_steps=None,
-        n_warmup_steps=None,
+        self, plm: str, n_classes: int, n_training_steps=None, n_warmup_steps=None,
     ):
         super().__init__()
-        self.encoder = AutoModel.from_pretrained(encoder_name, return_dict=True)
+        self.plm = plm
+        self.encoder = AutoModel.from_pretrained(plm, return_dict=True)
         self.classifier = nn.Linear(self.encoder.config.hidden_size, n_classes)
         self.dropout = nn.Dropout(self.encoder.config.hidden_dropout_prob)
         self.n_training_steps = n_training_steps
