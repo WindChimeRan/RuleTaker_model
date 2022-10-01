@@ -1,11 +1,11 @@
 import pytorch_lightning as pl
 
-# from pytorch_lightning.metrics.functional import accuracy, f1, auroc
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from transformers import AutoModel
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
+from typing import Any, Tuple
 import torch.nn as nn
 import torch
 
@@ -55,23 +55,20 @@ class RuleTakerModel(pl.LightningModule):
         self.log("train_loss", loss, prog_bar=True, logger=True)
         return {"loss": loss, "predictions": outputs["answer_index"], "label": label}
 
-    def validation_step(self, batch, batch_idx):
-        input_ids = batch["token_ids"]
-        attention_mask = batch["attention_mask"]
-        label = batch["label"]
-        loss, outputs = self(input_ids, attention_mask, label)
-        self.log("val_loss", loss, prog_bar=True, logger=True, sync_dist=True)
-        return loss
-
     def test_step(self, batch, batch_idx):
-        # data, metadata = batch
+        return self.val_test_step("test", batch, batch_idx)
+
+    def validation_step(self, batch, batch_idx):
+        return self.val_test_step("val", batch, batch_idx)
+
+    def val_test_step(self, split, batch, batch_idx):
 
         input_ids = batch["token_ids"]
         attention_mask = batch["attention_mask"]
         label = batch["label"]
         loss, outputs = self(input_ids, attention_mask, label)
-        self.log("test_loss", loss, prog_bar=True, logger=True, sync_dist=True)
-        return loss
+        self.log(f"loss_{split}", loss, prog_bar=True, logger=True, sync_dist=True)
+        return {"loss": loss, "predictions": outputs["answer_index"], "label": label}
 
     def training_epoch_end(self, outputs):
 
@@ -95,6 +92,9 @@ class RuleTakerModel(pl.LightningModule):
         #     )
 
     def configure_optimizers(self):
+        pass
+
+    def calculate_score(self):
         pass
 
     #     optimizer = AdamW(self.parameters(), lr=1e-5)
