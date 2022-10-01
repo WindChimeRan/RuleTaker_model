@@ -5,7 +5,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from transformers import AutoModel
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
-from typing import Any, Tuple
+from typing import Any, Tuple, Iterable
 import torch.nn as nn
 import torch
 
@@ -70,6 +70,12 @@ class RuleTakerModel(pl.LightningModule):
         self.log(f"loss_{split}", loss, prog_bar=True, logger=True, sync_dist=True)
         return {"loss": loss, "predictions": outputs["answer_index"], "label": label}
 
+    def validation_epoch_end(self, outputs: Iterable[Any]) -> None:
+        return self.val_test_epoch_end("val", outputs)
+
+    def test_epoch_end(self, outputs: Iterable[Any]) -> None:
+        return self.val_test_epoch_end("test", outputs)
+
     def training_epoch_end(self, outputs):
 
         labels = []
@@ -82,6 +88,75 @@ class RuleTakerModel(pl.LightningModule):
 
         labels = torch.stack(labels).int()
         predictions = torch.stack(predictions)
+
+    def val_test_epoch_end(self, split: str, outputs: Iterable[Any]) -> None:
+        results = []
+
+        for out in outputs:
+            # if self.dataset == "entailmentbank":
+            #     for proof_pred, score, proof in zip(*out):
+            #         results.append(
+            #             {
+            #                 "proof_pred": proof_pred,
+            #                 "score": score,
+            #                 "hypothesis": proof.hypothesis,
+            #                 "context": proof.context,
+            #                 "proof_gt": proof.proof_text,
+            #             }
+            #         )
+            # else:
+            for proof_pred, score, proof, answer, depth, all_proofs in zip(*out):
+                results.append(
+                    {
+                        "answer": answer,
+                        "depth": depth,
+                        "all_proofs": all_proofs,
+                        "proof_pred": proof_pred,
+                        "score": score,
+                        "hypothesis": proof.hypothesis,
+                        "context": proof.context,
+                        "proof_gt": proof.proof_text,
+                    }
+                )
+
+        assert self.trainer is not None
+        if self.logger is not None and self.trainer.log_dir is not None:
+            json_path = os.path.join(self.trainer.log_dir, f"results_{split}.json")
+            json.dump(results, open(json_path, "wt"))
+            if self.dataset == "entailmentbank":
+                tsv_path = os.path.join(self.trainer.log_dir, f"results_{split}.tsv")
+                with open(tsv_path, "wt") as oup:
+                    for r in results:
+                        proof = r["proof_pred"].strip()
+                        if not proof.endswith(";"):
+                            proof += ";"
+                        oup.write(f"$proof$ = {proof}\n")
+                print(f"Validation results saved to {json_path} and {tsv_path}")
+            else:
+                print(f"Validation results saved to {json_path}")
+
+        # if self.dataset == "entailmentbank" and results[0]["proof_gt"] != "":
+        #     em, f1 = evaluate_entailmentbank(results, eval_intermediates=False)
+        #     for k, v in em.items():
+        #         self.log(f"ExactMatch_{k}_{split}", v, on_step=False, on_epoch=True)
+        #     for k, v in f1.items():
+        #         self.log(f"F1_{k}_{split}", v, on_step=False, on_epoch=True)
+
+        # elif self.dataset == "ruletaker":
+        answer_accuracies, proof_accuracies = evaluate_ruletaker(results)
+        for k in answer_accuracies.keys():
+            self.log(
+                f"Accuracy_answer_{k}_{split}",
+                answer_accuracies[k],
+                on_step=False,
+                on_epoch=True,
+            )
+            self.log(
+                f"Accuracy_proof_{k}_{split}",
+                proof_accuracies[k],
+                on_step=False,
+                on_epoch=True,
+            )
 
         # TODO: add ACC
 
