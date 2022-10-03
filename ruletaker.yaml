@@ -10,7 +10,7 @@ lr_scheduler:
   class_path: torch.optim.lr_scheduler.OneCycleLR
   init_args:
     epochs: 4 
-    steps_per_epoch: 4381
+    steps_per_epoch: 5004
     pct_start: 0.06
     anneal_strategy: linear
     max_lr: 3.2e-4
@@ -20,6 +20,10 @@ trainer:
   gpus: [6, 7]
   max_epochs: 4
   gradient_clip_val: 1.0
+  # logger: 
+  #   -class_path: pytorch_lightning.loggers.pl_loggers.TensorBoardLogger
+  #   init_args:
+  #     save_dir: logs/
   # callbacks:
   # - class_path: pytorch_lightning.callbacks.EarlyStopping
   #   init_args:

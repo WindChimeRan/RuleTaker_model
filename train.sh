@@ -1,2 +1,2 @@
 echo "parameter: $1";
-python train.py
+python main.py fit --config ruletaker.yaml
