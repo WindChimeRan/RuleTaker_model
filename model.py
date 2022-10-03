@@ -26,10 +26,12 @@ class RuleTakerModel(pl.LightningModule):
         self.n_training_steps = n_training_steps
         self.n_warmup_steps = n_warmup_steps
         self.criterion = nn.CrossEntropyLoss()
-        self.metrics = {
-            "train": torchmetrics.Accuracy(),
-            "val": torchmetrics.Accuracy(),
-        }
+        # self.metrics = {
+        #     "train": torchmetrics.Accuracy(compute_on_cpu=False, sync_on_compute=True),
+        #     "val": torchmetrics.Accuracy(compute_on_cpu=False, sync_on_compute=True),
+        # }
+        self.train_metrics = torchmetrics.Accuracy()
+        self.val_metrics = torchmetrics.Accuracy()
         # self.train_metrics = torchmetrics.Accuracy()
         # self.val_metrics = torchmetrics.Accuracy()
 
@@ -48,12 +50,15 @@ class RuleTakerModel(pl.LightningModule):
             loss = self.criterion(label_logits, label)
             is_correct = output_dic["answer_index"] == label
             output_dic["is_correct"] = is_correct
-
+        # print(input_ids)
+        # print(label)
+        # exit()
         return loss, output_dic
 
-    def log_metrics(self, split, pred, label) -> None:
-        self.metrics[split](pred, label)
-        self.log(f"Acc_{split}", self.metrics[split], on_step=False, on_epoch=True)
+    # def log_metrics(self, split, pred, label) -> None:
+    #     self.metrics[split](pred, label)
+    #     # self.metrics[split](pred, label)
+    #     self.log(f"Acc_{split}", self.metrics[split], on_step=False, on_epoch=True)
 
     def training_step(self, batch, batch_idx):
         # data, metadata = batch
@@ -65,9 +70,21 @@ class RuleTakerModel(pl.LightningModule):
         # self.metrics(outputs["answer_index"], label)
         # acc = self.metrics
         self.log("loss_train", loss, on_step=True, on_epoch=True)
-        self.log_metrics("train", outputs["answer_index"], label)
+        # self.log_metrics("train", outputs["answer_index"], label)
         # self.log("performance", {"loss": loss, "acc": acc})
         return {"loss": loss, "predictions": outputs["answer_index"], "label": label}
+
+    def training_step_end(self, step_output):
+        split = "train"
+        self.train_metrics(step_output["predictions"], step_output["label"])
+        self.log(f"Acc_{split}", self.train_metrics, on_step=False, on_epoch=True)
+        # self.log_metrics("train", step_output["predictions"], step_output["label"])
+
+    def validation_step_end(self, step_output):
+        # self.log_metrics("val", step_output["predictions"], step_output["label"])
+        split = "val"
+        self.val_metrics(step_output["predictions"], step_output["label"])
+        self.log(f"Acc_{split}", self.val_metrics, on_step=False, on_epoch=True)
 
     # def test_step(self, batch, batch_idx):
     #     return self.val_test_step("test", batch, batch_idx)
@@ -82,7 +99,7 @@ class RuleTakerModel(pl.LightningModule):
         label = batch["label"]
         loss, outputs = self(input_ids, attention_mask, label)
         # self.metrics["val"](outputs["answer_index"], label)
-        self.log_metrics("val", outputs["answer_index"], label)
+        # self.log_metrics("val", outputs["answer_index"], label)
         # acc = self.metrics
         self.log("loss_val", loss, on_step=True, on_epoch=True)
 
@@ -97,7 +114,7 @@ class RuleTakerModel(pl.LightningModule):
     #     return self.val_test_epoch_end("test", outputs)
 
     def training_epoch_end(self, outputs):
-        self.metrics["train"].reset()
+        self.train_metrics.reset()
 
     #     labels = []
     #     predictions = []
@@ -111,9 +128,9 @@ class RuleTakerModel(pl.LightningModule):
     #     predictions = torch.stack(predictions)
 
     def val_test_epoch_end(self, split: str, outputs: Iterable[Any]) -> None:
-        val = self.metrics["val"].compute()
+        val = self.val_metrics.compute()
         self.log("val_acc_epoch", val)
-        self.metrics["val"].reset()
+        self.val_metrics.reset()
         print("val acc ", val)
 
     def configure_optimizers(self):

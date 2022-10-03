@@ -196,6 +196,7 @@ class RuleTakerDataset(Dataset):
             "tokens": [x for x in question_text.split()],
             "context": context,
         }
+        assert label is not None
         if label is not None:
             # We'll assume integer labels don't need indexing
             # fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
