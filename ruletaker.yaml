@@ -13,7 +13,7 @@ lr_scheduler:
     steps_per_epoch: 5004
     pct_start: 0.06
     anneal_strategy: linear
-    max_lr: 3.2e-4
+    max_lr: 1e-5
     div_factor: 32
     cycle_momentum: False
 trainer:
