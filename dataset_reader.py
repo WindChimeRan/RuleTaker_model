@@ -59,11 +59,6 @@ class RuleTakerDataset(Dataset):
         use_context_full: bool = False,
         sample: int = -1,
     ) -> None:
-        # super().__init__()
-        # self._tokenizer = PretrainedTransformerTokenizer(pretrained_model, max_length=max_pieces)
-        # self._tokenizer_internal = self._tokenizer.tokenizer
-        # token_indexer = PretrainedTransformerIndexer(pretrained_model)
-        # self._token_indexers = {'tokens': token_indexer}
 
         self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
 
@@ -83,16 +78,7 @@ class RuleTakerDataset(Dataset):
     def __getitem__(self, index):
         return self.text_to_instance(**self.data[index])
 
-    # # @overrides
-    # def _read(self, file_path: str):
-    #     # logger.debug("_read")
-    #     instances = self._read_internal(file_path)
-    #     return instances
-
     def read_generator(self, file_path: str):
-        # if `file_path` is a URL, redirect to the cache
-        # file_path = cached_path(file_path)
-        # logger.debug("_read_internal")
         counter = self._sample + 1
         debug = 1
         is_done = False
@@ -138,12 +124,6 @@ class RuleTakerDataset(Dataset):
                         label = None
                         if "label" in question:
                             label = 1 if question["label"] else 0
-                    # elif self._syntax == "propositional-meta":
-                    #     text = question[1]["question"]
-                    #     q_id = f"{item_id}-{question[0]}"
-                    #     label = question[1].get("propAnswer")
-                    #     if label is not None:
-                    #         label = ["False", "True", "Unknown"].index(label)
 
                     yield {
                         "item_id": q_id,
@@ -152,14 +132,6 @@ class RuleTakerDataset(Dataset):
                         "label": label,
                         "debug": debug,
                     }
-
-                    # yield self.text_to_instance(
-                    #     item_id=q_id,
-                    #     question_text=text,
-                    #     context=context,
-                    #     label=label,
-                    #     debug=debug,
-                    # )
 
     def text_to_instance(
         self,  # type: ignore
@@ -176,7 +148,6 @@ class RuleTakerDataset(Dataset):
             add_special_tokens=True,
             max_length=self._max_pieces,
             return_token_type_ids=True,
-            # return_token_type_ids=False,
             padding="max_length",
             truncation=True,
             return_attention_mask=True,
@@ -189,88 +160,22 @@ class RuleTakerDataset(Dataset):
         }
         metadata = {
             "id": item_id,
-            # "token_ids": encoding["input_ids"].flatten(),
-            # "attention_mask": encoding["attention_mask"].flatten(),
-            # "segment_ids": encoding["token_type_ids"],
             "question_text": question_text,
             "tokens": [x for x in question_text.split()],
             "context": context,
         }
         assert label is not None
         if label is not None:
-            # We'll assume integer labels don't need indexing
-            # fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
             data["label"] = label
             data["correct_answer_index"] = label
 
         data["metadata"] = metadata
         return data
-        # return (data, metadata)
-
-    # # @overrides
-    # def old_text_to_instance(
-    #     self,  # type: ignore
-    #     item_id: str,
-    #     question_text: str,
-    #     label: int = None,
-    #     context: str = None,
-    #     debug: int = -1,
-    # ) -> Instance:
-    #     # pylint: disable=arguments-differ
-    #     fields: Dict[str, Field] = {}
-    #     qa_tokens, segment_ids = self.transformer_features_from_qa(
-    #         question_text, context
-    #     )
-    #     qa_field = TextField(qa_tokens, self._token_indexers)
-    #     fields["phrase"] = qa_field
-
-    #     metadata = {
-    #         "id": item_id,
-    #         "question_text": question_text,
-    #         "tokens": [x.text for x in qa_tokens],
-    #         "context": context,
-    #     }
-
-    #     if label is not None:
-    #         # We'll assume integer labels don't need indexing
-    #         fields["label"] = LabelField(label, skip_indexing=isinstance(label, int))
-    #         metadata["label"] = label
-    #         metadata["correct_answer_index"] = label
-
-    #     if debug > 0:
-    #         logger.info(f"qa_tokens = {qa_tokens}")
-    #         logger.info(f"context = {context}")
-    #         logger.info(f"label = {label}")
-
-    #     fields["metadata"] = MetadataField(metadata)
-
-    #     return Instance(fields)
-
-    # def transformer_features_from_qa(self, question: str, context: str):
-    #     # if self._add_prefix is not None:
-    #     #     question = self._add_prefix.get("q", "") + question
-    #     #     context = self._add_prefix.get("c", "") + context
-    #     if context is not None:
-    #         tokens = self._tokenizer.tokenize_sentence_pair(question, context)
-    #     else:
-    #         tokens = self._tokenizer.tokenize(question)
-    #     segment_ids = [0] * len(tokens)
-
-    #     return tokens, segment_ids
 
 
 if __name__ == "__main__":
     logger.debug("debug")
     backbone = "roberta-base"
-    # reader = RuleTakerDataset(path=train_data_path, pretrained_model=backbone)
     reader = RuleTakerDataset(path=test_data_path, pretrained_model=backbone)
-    # reader._read(train_data_path)
     for i in range(20):
         logger.debug(reader[i])
-    # for i, item in enumerate(reader):
-    #     if i > 20:
-    #         break
-    #     logger.debug(item)
-    # Shut down the logger
-    # logging.shutdown()
-    # print("emmm")

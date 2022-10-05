@@ -1,9 +1,5 @@
-# from common import *
-# from pytorch_lightning.utilities.cli import LightningCLI
 from pytorch_lightning.cli import LightningCLI
 
-# from prover.datamodule import ProofDataModule
-# from prover.model import EntailmentWriter
 from model import RuleTakerModel
 from dataloader import RuleTakerDataModule
 from typing import Any
@@ -12,6 +8,9 @@ from typing import Any
 class RuletakerCLI(LightningCLI):
     def add_arguments_to_parser(self, parser: Any) -> None:
         parser.link_arguments("model.plm", "data.plm", apply_on="instantiate")
+        # parser.link_arguments(
+        #     "trainer.max_epochs", "lr_scheduler.init_args.epochs"
+        # )
 
 
 def main() -> None:
