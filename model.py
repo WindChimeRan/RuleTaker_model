@@ -5,22 +5,31 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from transformers import AutoModel
+from transformers import get_cosine_schedule_with_warmup
 
 
-from typing import Any, Tuple, Iterable
+from typing import Any, Tuple, Iterable, Dict
 
 import torch.nn as nn
+import torch
 
 
 class RuleTakerModel(pl.LightningModule):
     def __init__(
-        self, plm: str, n_classes: int, n_training_steps=None, n_warmup_steps=None,
+        self,
+        plm: str,
+        n_classes: int,
+        n_training_steps=None,
+        n_warmup_steps=None,
+        lr=None,
     ):
         super().__init__()
         self.plm = plm
         self.encoder = AutoModel.from_pretrained(plm, return_dict=True)
         self.classifier = nn.Linear(self.encoder.config.hidden_size, n_classes)
         self.dropout = nn.Dropout(self.encoder.config.hidden_dropout_prob)
+        self.lr = lr
+        # self.warmup_steps = warmup_steps
         self.n_training_steps = n_training_steps
         self.n_warmup_steps = n_warmup_steps
         self.criterion = nn.CrossEntropyLoss()
@@ -110,5 +119,34 @@ class RuleTakerModel(pl.LightningModule):
         self.val_metrics.reset()
         print("val acc ", val)
 
-    def configure_optimizers(self):
-        pass
+    def configure_optimizers(self) -> Dict[str, Any]:
+        assert self.trainer is not None
+        max_steps = (
+            self.trainer.max_epochs
+            * len(self.trainer.datamodule.train_dataloader())
+            // self.trainer.accumulate_grad_batches
+        )
+        return get_optimizers(
+            self.parameters(), self.lr, self.n_warmup_steps, max_steps,
+        )
+
+
+def get_optimizers(
+    parameters: Iterable[torch.nn.parameter.Parameter],
+    lr: float,
+    num_warmup_steps: int,
+    num_training_steps: int,
+) -> Dict[str, Any]:
+    """
+    Get an AdamW optimizer with linear learning rate warmup and cosine decay.
+    """
+    optimizer = torch.optim.AdamW(parameters, lr=lr)
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=num_warmup_steps,
+        num_training_steps=num_training_steps,
+    )
+    return {
+        "optimizer": optimizer,
+        "lr_scheduler": {"scheduler": scheduler, "interval": "step",},
+    }

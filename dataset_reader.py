@@ -51,7 +51,7 @@ class RuleTakerDataset(Dataset):
         self,
         pretrained_model: str,
         path: str,
-        max_pieces: int = 384,
+        max_pieces: int = 128,
         syntax: str = "rulebase",
         add_prefix: Dict[str, str] = None,
         skip_id_regex: str = None,

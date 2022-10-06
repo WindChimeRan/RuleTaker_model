@@ -1,23 +1,23 @@
-seed_everything: 71
-optimizer:
-  class_path: transformers.optimization.AdamW
-  init_args:
-    lr: 1e-5
-    betas: [0.9, 0.98]
-    weight_decay: 0.1
-lr_scheduler:
-  class_path: torch.optim.lr_scheduler.OneCycleLR
-  init_args:
-    epochs: 20 
-    steps_per_epoch: 5004
-    pct_start: 0.06
-    anneal_strategy: linear
-    max_lr: 1e-5
-    div_factor: 32
-    cycle_momentum: False
+seed_everything: 1
+# optimizer:
+#   class_path: transformers.optimization.AdamW
+#   init_args:
+#     lr: 5e-6
+#     betas: [0.9, 0.98]
+#     weight_decay: 0.1
+# lr_scheduler:
+#   class_path: torch.optim.lr_scheduler.OneCycleLR
+#   init_args:
+#     epochs: 20 
+#     steps_per_epoch: 5004
+#     pct_start: 0.06
+#     anneal_strategy: linear
+#     max_lr: 1e-5
+#     div_factor: 32
+#     cycle_momentum: False
 trainer:
   gpus: [6, 7]
-  max_epochs: 20
+  max_epochs: 
   gradient_clip_val: 1.0
   callbacks:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
@@ -27,6 +27,7 @@ model:
   n_classes: 2
   n_warmup_steps: 2500
   n_training_steps: 70108
+  lr: 5e-6
   plm: roberta-large
 data:
   batch_size: 8
