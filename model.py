@@ -5,7 +5,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from transformers import AutoModel
-from transformers import get_cosine_schedule_with_warmup
+from transformers import (
+    get_cosine_schedule_with_warmup,
+    get_linear_schedule_with_warmup,
+)
 
 
 from typing import Any, Tuple, Iterable, Dict
@@ -141,7 +144,8 @@ def get_optimizers(
     Get an AdamW optimizer with linear learning rate warmup and cosine decay.
     """
     optimizer = torch.optim.AdamW(parameters, lr=lr)
-    scheduler = get_cosine_schedule_with_warmup(
+    # scheduler = get_cosine_schedule_with_warmup(
+    scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=num_warmup_steps,
         num_training_steps=num_training_steps,

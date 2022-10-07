@@ -17,7 +17,7 @@ seed_everything: 1
 #     cycle_momentum: False
 trainer:
   gpus: [6, 7]
-  max_epochs: 
+  max_epochs: 10
   gradient_clip_val: 1.0
   callbacks:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
@@ -25,9 +25,11 @@ trainer:
         logging_interval: step
 model:
   n_classes: 2
+  # n_warmup_steps: 2500
   n_warmup_steps: 2500
   n_training_steps: 70108
-  lr: 5e-6
+  # lr: 5e-6
+  lr: 1e-5
   plm: roberta-large
 data:
   batch_size: 8
